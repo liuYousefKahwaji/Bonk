@@ -1,0 +1,115 @@
+<Window x:Class="Bonk.App.UI.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:Bonk.App.UI"
+        Title="Bonk — microphone macros" Width="1080" Height="900" MinWidth="880" MinHeight="620"
+        Style="{StaticResource {x:Type Window}}" WindowStartupLocation="CenterScreen" Loaded="WindowLoaded" Closing="WindowClosing" StateChanged="WindowStateChanged">
+    <Grid Margin="32,26" Background="{StaticResource BackgroundBrush}">
+      <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+      <Grid Margin="0,0,0,26">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+        <StackPanel>
+          <StackPanel Orientation="Horizontal">
+            <Border Background="{StaticResource AccentBrush}" CornerRadius="12" Width="46" Height="46" Margin="0,0,13,0">
+              <Viewbox Margin="11"><Canvas Width="24" Height="28">
+                <Rectangle Canvas.Left="8" Width="8" Height="17" RadiusX="4" RadiusY="4" Fill="#151C24" />
+                <Path Data="M 4,12 L 4,15 C 4,25 20,25 20,15 L 20,12 M 12,23 L 12,28 M 7,28 L 17,28" Stroke="#151C24" StrokeThickness="2.2" />
+              </Canvas></Viewbox>
+            </Border>
+            <TextBlock Text="Bonk" FontSize="36" FontWeight="SemiBold" VerticalAlignment="Center" />
+            <TextBlock Text="0.1" Foreground="{StaticResource MutedBrush}" Margin="10,21,0,0" />
+          </StackPanel>
+          <TextBlock Text="Small taps. Useful things." Foreground="{StaticResource MutedBrush}" Margin="0,10,0,0" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+          <Button x:Name="PauseButton" Content="Pause detection" Click="ToggleDetection" Margin="0,0,10,0" />
+          <Button Content="Send to tray" Click="SendToTray" />
+        </StackPanel>
+      </Grid>
+      <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+      <Grid>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="0.95*" /><ColumnDefinition Width="24" /><ColumnDefinition Width="1.15*" /></Grid.ColumnDefinitions>
+        <StackPanel>
+          <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="22" BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+            <StackPanel>
+              <TextBlock Text="THE LISTENING PART" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,16" />
+              <TextBlock Text="Microphone" FontWeight="SemiBold" Margin="0,0,0,8" />
+              <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <ComboBox x:Name="MicrophoneBox" DisplayMemberPath="Name" SelectionChanged="MicrophoneChanged" AutomationProperties.Name="Microphone" />
+                <Button Grid.Column="1" Content="↻" Click="RefreshMicrophones" ToolTip="Refresh microphones" AutomationProperties.Name="Refresh microphones" Margin="8,0,0,0" Padding="10,6" />
+              </Grid>
+              <TextBlock x:Name="CaptureStatus" Text="Connecting…" Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,9,0,18" />
+              <Grid Margin="0,0,0,7"><TextBlock Text="Input level" /><TextBlock x:Name="InputText" Text="0%" HorizontalAlignment="Right" Foreground="{StaticResource MutedBrush}" /></Grid>
+              <ProgressBar x:Name="InputMeter" Height="9" Minimum="0" Maximum="1" Foreground="{StaticResource AccentBrush}" Background="#303842" BorderThickness="0" />
+              <local:LevelHistory x:Name="History" Height="112" Margin="0,14,0,10" ToolTip="Recent input peaks. Dashed line: trigger threshold. Green line: noise floor. Square-root scale." />
+              <Grid Margin="0,0,0,18"><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
+                <TextBlock x:Name="NoiseText" Text="Noise floor  0.000" Foreground="#6EACA3" FontSize="11" />
+                <TextBlock Grid.Column="1" x:Name="ThresholdText" Text="Threshold  0.120" Foreground="{StaticResource MutedBrush}" FontSize="11" HorizontalAlignment="Right" />
+              </Grid>
+              <Grid><TextBlock Text="Sensitivity" FontWeight="SemiBold" /><TextBlock x:Name="SensitivityValue" HorizontalAlignment="Right" Foreground="{StaticResource AccentBrush}" /></Grid>
+              <Slider x:Name="SensitivitySlider" Minimum="1" Maximum="10" TickFrequency="0.1" IsSnapToTickEnabled="True" ValueChanged="DetectionSettingChanged" Margin="0,8,0,0" AutomationProperties.Name="Sensitivity" />
+              <Grid Margin="0,4,0,14"><TextBlock Text="Fewer triggers" FontSize="11" Foreground="{StaticResource MutedBrush}" /><TextBlock Text="Lighter taps" HorizontalAlignment="Right" FontSize="11" Foreground="{StaticResource MutedBrush}" /></Grid>
+              <Expander Header="Fine-tune detection" Foreground="{StaticResource TextBrush}">
+                <StackPanel Margin="0,14,0,0">
+                  <Grid><TextBlock Text="Minimum strength" /><TextBlock x:Name="StrengthValue" HorizontalAlignment="Right" /></Grid>
+                  <Slider x:Name="StrengthSlider" Minimum="0.01" Maximum="0.95" TickFrequency="0.01" IsSnapToTickEnabled="True" ValueChanged="DetectionSettingChanged" Margin="0,6,0,12" AutomationProperties.Name="Minimum strength" />
+                  <Grid><TextBlock Text="Debounce" /><TextBlock x:Name="DebounceValue" HorizontalAlignment="Right" /></Grid>
+                  <Slider x:Name="DebounceSlider" Minimum="50" Maximum="300" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="DetectionSettingChanged" Margin="0,6,0,12" AutomationProperties.Name="Debounce milliseconds" />
+                  <Grid><TextBlock Text="Maximum gap between taps" /><TextBlock x:Name="GapValue" HorizontalAlignment="Right" /></Grid>
+                  <Slider x:Name="GapSlider" Minimum="100" Maximum="1000" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="DetectionSettingChanged" Margin="0,6,0,12" AutomationProperties.Name="Maximum gap milliseconds" />
+                  <Grid><TextBlock Text="Gesture completion timeout" /><TextBlock x:Name="TimeoutValue" HorizontalAlignment="Right" /></Grid>
+                  <Slider x:Name="TimeoutSlider" Minimum="150" Maximum="1500" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="DetectionSettingChanged" Margin="0,6,0,8" AutomationProperties.Name="Completion timeout milliseconds" />
+                  <TextBlock Text="The timeout always leaves enough time for the next tap to finish." Foreground="{StaticResource MutedBrush}" FontSize="11" TextWrapping="Wrap" />
+                  <Button Content="Reset tuning" Click="ResetTuning" HorizontalAlignment="Left" Margin="0,12,0,0" />
+                </StackPanel>
+              </Expander>
+            </StackPanel>
+          </Border>
+          <TextBlock Text="Try a gentle tap on the headset or mic housing. Give the room half a second to settle after changing settings." TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="8,14,8,0" />
+        </StackPanel>
+        <StackPanel Grid.Column="2">
+          <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="22" BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+            <StackPanel>
+              <Grid Margin="0,0,0,18"><TextBlock Text="THE USEFUL THINGS" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
+                <Button x:Name="AddBindingButton" Content="+ Add binding" Click="AddBinding" HorizontalAlignment="Right" Padding="10,6" />
+              </Grid>
+              <ItemsControl x:Name="BindingsList">
+                <ItemsControl.ItemTemplate><DataTemplate>
+                  <Border Background="#222A33" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                      <CheckBox IsChecked="{Binding Enabled, Mode=TwoWay}" Checked="BindingEnabledChanged" Unchecked="BindingEnabledChanged" VerticalAlignment="Center" Margin="0,0,12,0" AutomationProperties.Name="{Binding TriggerLabel}" />
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center"><TextBlock Text="{Binding TriggerLabel}" FontWeight="SemiBold" /><TextBlock Text="{Binding ActionLabel}" Foreground="{StaticResource MutedBrush}" FontSize="12" TextTrimming="CharacterEllipsis" ToolTip="{Binding ActionLabel}" Margin="0,4,0,0" /></StackPanel>
+                      <Button Grid.Column="2" Content="Edit" Click="EditBinding" Padding="10,6" Margin="8,0,0,0" AutomationProperties.Name="{Binding TriggerLabel, StringFormat=Edit {0}}" />
+                    </Grid>
+                  </Border>
+                </DataTemplate></ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <TextBlock Text="For Discord, add matching Toggle Mute / Toggle Deafen keybinds in Discord's settings." Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0" />
+            </StackPanel>
+          </Border>
+          <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="22" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" Margin="0,18,0,0">
+            <StackPanel>
+              <Grid Margin="0,0,0,12"><TextBlock Text="WHAT BONK HEARD" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
+                <Button Content="Clear" Click="ClearLog" HorizontalAlignment="Right" Padding="10,4" />
+              </Grid>
+              <TextBlock x:Name="LastGestureText" Text="Ready when you are." Foreground="{StaticResource AccentBrush}" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,10" />
+              <ListBox x:Name="EventLog" Height="140" Background="#14191F" Foreground="{StaticResource MutedBrush}" BorderThickness="0" FontFamily="Consolas" FontSize="11" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="Detection event log">
+                <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="5,4" Foreground="{StaticResource MutedBrush}" /></DataTemplate></ListBox.ItemTemplate>
+              </ListBox>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Grid>
+      </ScrollViewer>
+      <StackPanel Grid.Row="2" Margin="0,24,0,0">
+        <Border Background="#29251F" CornerRadius="8" Padding="14,12" BorderBrush="#534332" BorderThickness="1">
+          <StackPanel><CheckBox x:Name="TestModeBox" Content="Test mode — show gestures without running actions" Checked="TestModeChanged" Unchecked="TestModeChanged" />
+            <TextBlock Text="Tune first, then turn test mode off when the log looks right." Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="21,5,0,0" />
+          </StackPanel>
+        </Border>
+        <Grid Margin="0,18,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+          <StackPanel><CheckBox x:Name="StartupBox" Content="Start with Windows (in the tray)" Checked="StartupChanged" Unchecked="StartupChanged" /><TextBlock x:Name="SaveStatus" Text="Offline. No audio recordings. Settings saved automatically." Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,8,0,0" /></StackPanel>
+          <Button Grid.Column="1" Content="Restart as administrator" Click="RestartAsAdministrator" Padding="12,6" VerticalAlignment="Top" ToolTip="Use only when sending input to an elevated application." />
+        </Grid>
+        <TextBlock Text="Closing the window keeps Bonk in your tray. Right-click its icon to quit." Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,14,0,0" />
+      </StackPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Bonk.Core/Bonk.Core.csproj" />
+    <Project Path="src/Bonk.App/Bonk.App.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Bonk.Core.Tests/Bonk.Core.Tests.csproj" />
+  </Folder>
+</Solution>
