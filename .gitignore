@@ -1,0 +1,29 @@
+# Build leftovers. Bonks are temporary; source code is forever.
+**/bin/
+**/obj/
+artifacts/
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# IDEs and local tooling
+.vs/
+.idea/
+*.user
+*.suo
+*.sln.docstates
+.tools/
+
+# Local configuration, credentials and crash dumps
+.env
+.env.*
+!.env.example
+config.json
+*.dmp
+*.log
+
+# OS clutter
+Thumbs.db
+Desktop.ini
+.DS_Store

@@ -1,0 +1,37 @@
+name: Build Bonk
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build
+        run: dotnet build Bonk.slnx --configuration Release --warnaserror
+      - name: Test
+        run: dotnet test Bonk.slnx --configuration Release --no-build --logger "trx;LogFileName=tests.trx"
+      - name: Package portable build
+        shell: pwsh
+        run: ./scripts/Publish.ps1
+      - name: Upload portable build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bonk-win-x64
+          path: artifacts/Bonk-*-win-x64.zip
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Test-results
+          path: '**/TestResults/*.trx'
+          if-no-files-found: ignore
